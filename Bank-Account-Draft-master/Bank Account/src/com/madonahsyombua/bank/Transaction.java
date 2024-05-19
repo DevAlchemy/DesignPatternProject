@@ -1,84 +1,54 @@
-package com.madonahsyombua.bank;
+// Context class
+class TransactionContext {
+	private TransactionState state;
 
-import java.util.Date;
-
-// Component interface
-interface TransactionComponent {
-	double getAmount();
-	String getSummaryLine();
-}
-
-// Concrete component
-class SimpleTransaction implements TransactionComponent {
-	private double amount;
-	private Date timestamp;
-	private String memo;
-
-	public SimpleTransaction(double amount, String memo) {
-		this.amount = amount;
-		this.timestamp = new Date();
-		this.memo = memo;
+	public TransactionContext() {
+		this.state = new PendingState();
 	}
 
-	@Override
-	public double getAmount() {
-		return this.amount;
+	public void setState(TransactionState state) {
+		this.state = state;
 	}
 
-	@Override
-	public String getSummaryLine() {
-		if (this.amount >= 0) {
-			return String.format("%s : $%.02f : %s,", this.timestamp.toString(), this.amount, this.memo);
-		} else {
-			return String.format("%s : $(%.02f) : %s,", this.timestamp.toString(), this.amount, this.memo);
-		}
+	public void process() {
+		state.process(this);
 	}
 }
 
-// Decorator
-abstract class TransactionDecorator implements TransactionComponent {
-	protected TransactionComponent decoratedTransaction;
+// State interface
+interface TransactionState {
+	void process(TransactionContext context);
+}
 
-	public TransactionDecorator(TransactionComponent decoratedTransaction) {
-		this.decoratedTransaction = decoratedTransaction;
-	}
-
+// Concrete states
+class PendingState implements TransactionState {
 	@Override
-	public double getAmount() {
-		return decoratedTransaction.getAmount();
-	}
-
-	@Override
-	public String getSummaryLine() {
-		return decoratedTransaction.getSummaryLine();
+	public void process(TransactionContext context) {
+		System.out.println("Processing pending transaction...");
+		// Perform pending transaction processing logic
+		// Transition to the next state if needed
+		context.setState(new ProcessedState());
 	}
 }
 
-// Concrete decorators
-class EncryptedTransaction extends TransactionDecorator {
-	public EncryptedTransaction(TransactionComponent decoratedTransaction) {
-		super(decoratedTransaction);
-	}
-
+class ProcessedState implements TransactionState {
 	@Override
-	public String getSummaryLine() {
-		// Encrypt the summary line
-		String summary = super.getSummaryLine();
-		// Perform encryption here
-		return "Encrypted: " + summary;
+	public void process(TransactionContext context) {
+		System.out.println("Transaction has been processed.");
+		// Perform processed transaction logic
+		// Transition to other states if needed
 	}
 }
 
-class LoggedTransaction extends TransactionDecorator {
-	public LoggedTransaction(TransactionComponent decoratedTransaction) {
-		super(decoratedTransaction);
-	}
+public class StatePatternExample {
+	public static void main(String[] args) {
+		TransactionContext context = new TransactionContext();
 
-	@Override
-	public String getSummaryLine() {
-		// Log the summary line
-		String summary = super.getSummaryLine();
-		// Log the summary here
-		return "Logged: " + summary;
+		// Process the transaction in the initial state
+		context.process();
+
+		// Change the state and process the transaction again
+		context.setState(new ProcessedState());
+		context.process();
 	}
 }
